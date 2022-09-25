@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-10 col-sum-6">
+            <a href={% url 'post_detail' object.pk %} class="btn btn-light">Back To Post</a>
+        </div>
+    </div>  
+</div>
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-10 col-sum-12 border-bottom">
+            <h4> Update Your comment</h4>
+        </div>
+    </div>  
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-10 col-sum-12 text-center">
+            <form method="POST">
+                {% csrf_token %}
+                {{ form | crispy }}
+                <div>
+                    <button class="btn btn-success btn-dark mt-3">Submit!</button>
+                </div>
+            </form>
+        </div>
+    </div>  
+</div>
+{% endblock content %}
