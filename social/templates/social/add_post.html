@@ -4,6 +4,11 @@
 
 {% block content %}
 <div class="container">
+    <div class="row mt-5">
+        <div class="col-md-10 col-sum-6">
+            <a href={% url 'post-list' %} class="btn btn-light">Back To Feed</a>
+        </div>
+    </div> 
     <div class="row justify-content-center mt-5">
         <div class="col-md-10 col-sum-12 text-center">
             <p><strong> hey {{ post.auther }} </strong></p>
@@ -11,7 +16,7 @@
     </div>   
     <div class="row justify-content-center mt-5">
         <div class="col-md-10 col-sum-12 text-center">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ form | crispy }}
                 <div>

@@ -1,8 +1,6 @@
-from cProfile import Profile
-from multiprocessing import context
 from django.shortcuts import render ,redirect
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect , HttpResponse
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.views import View
 from .models import *
@@ -35,8 +33,11 @@ class AddPostForm(LoginRequiredMixin ,View):
         return render(request , 'social/add_post.html',context)
 
     def post(self, request, *args, **kwargs):
-        posts = Post.objects.all().order_by('-created_at')
-        form = PostForm(request.POST)
+        logged_in_user = request.user
+        posts = Post.objects.filter(
+            auther__profile__followers__in=[logged_in_user.id] 
+        ).order_by('-created_at')
+        form = PostForm(request.POST , request.FILES)
 
         if form.is_valid():
             new_post = form.save(commit=False)
@@ -64,7 +65,11 @@ class PostDetailView(LoginRequiredMixin , View):
         return render(request , 'social/post_detail.html', context)
 
     def post(self, request, pk, *args, **kwargs):
-        post = Post.objects.get(pk=pk)
+        logged_in_user = request.user
+        post = Post.objects.filter(
+            auther__profile__followers__in=[logged_in_user.id]
+        ).order_by('-created_at')
+        
         form = CommentForm(request.POST)
 
         if form.is_valid():
@@ -74,6 +79,9 @@ class PostDetailView(LoginRequiredMixin , View):
             new_comment.save()
 
         comment = Comment.objects.filter(post=post).order_by('-created_at')
+        notification = Notifications.objects.create(notification_type=2, user_from=request.user, user_to=post.auther, post=post)
+
+
         context = {
             'post': post,
             'form': form,
@@ -133,6 +141,24 @@ class CommentDeleteView(LoginRequiredMixin,UserPassesTestMixin,DeleteView):
         comment = self.get_object()
         return self.request.user == comment.author
 
+class CommentReplyView(LoginRequiredMixin, View):
+
+    def post(self, request, post_pk, pk, *args, **kwargs):
+        post = Post.objects.get(pk=post_pk)
+        parent_comment = Comment.objects.get(pk=pk)
+        form = CommentForm(request.POST)
+
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.author = request.user
+            new_comment.post = post
+            new_comment.parent = parent_comment
+            new_comment.save()
+
+        notification = Notifications.objects.create(notification_type=2, user_from=request.user, user_to=parent_comment.author, comment=new_comment)
+
+        return redirect('post_detail', pk=post_pk)
+
 
 class ProfileView(View):
     def get(self, request, pk, *args, **kwargs):
@@ -184,6 +210,7 @@ class AddFollower(LoginRequiredMixin, View):
     def post(self, request,pk, *args, **kwargs):
         profile =UserProfile.objects.get(pk=pk)
         profile.followers.add(request.user)
+        notification = Notifications.objects.create(notification_type=3, user_from=request.user, user_to=profile.user)
 
         return redirect('profile',pk=profile.pk)
 
@@ -220,6 +247,8 @@ class AddLike(LoginRequiredMixin,View):
 
         if not is_like:
             post.likes.add(request.user)
+            notification = Notifications.objects.create(notification_type=1, user_from=request.user, user_to=post.auther, post=post)
+
 
         if is_like:
             post.likes.remove(request.user)
@@ -250,6 +279,7 @@ class DisLike(LoginRequiredMixin,View):
 
         if not is_dislike:
             post.dislikes.add(request.user)
+            
 
         if is_dislike:
             post.dislikes.remove(request.user)
@@ -321,6 +351,8 @@ class CommentLikes(LoginRequiredMixin, View):
 
         if not is_like:
             comment.likes.add(request.user)
+            notification = Notifications.objects.create(notification_type=1, user_from=request.user, user_to=comment.author, comment=comment)
+
 
         if is_like:
             comment.likes.remove(request.user)
@@ -341,3 +373,34 @@ class ListFollowers(LoginRequiredMixin, View):
 
 
         return render(request, 'social/followers.html', context)
+
+class PostNotification(View):
+    def get(self, request, notification_pk, post_pk, *args, **kwargs):
+        notification = Notifications.objects.get(pk=notification_pk)
+        post = Post.objects.get(pk=post_pk)
+
+        notification.user_has_seen = True
+        notification.save()
+
+        return redirect('post_detail', pk=post_pk)
+
+class FollowNotification(View):
+    def get(self, request, notification_pk, profile_pk, *args, **kwargs):
+        notification = Notifications.objects.get(pk=notification_pk)
+        profile = UserProfile.objects.get(pk=profile_pk)
+
+        notification.user_has_seen = True
+        notification.save()
+
+        return redirect('profile', pk=profile_pk)
+
+
+
+class RemoveNotification(View):
+    def delete(self, request, notification_pk, *args, **kwargs):
+        notification = Notifications.objects.get(pk=notification_pk)
+
+        notification.user_has_seen = True
+        notification.save()
+
+        return HttpResponse('Success', content_type='text/plain')

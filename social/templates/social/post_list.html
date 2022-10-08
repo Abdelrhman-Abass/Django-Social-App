@@ -9,9 +9,10 @@
 </div>
 
 <div class="container">
+
     {% for post in posts %}
-    <div class="row justify-content-center text-left mt-5">
-        <div class="col-md-10 col-sum-12 border-bottom">
+    <div class="row justify-content-center text-left mt-3 mb-5">
+        <div class="col-md-5 col-sum-12 border-bottom">
             <div>
                 <a href="{% url 'profile' post.auther.profile.pk %}">
                     <img style="float: left; margin-right: 1rem;" class="rounded-circle" height="30" width="30" src="{{ post.auther.profile.picture.url }}" />
@@ -22,6 +23,9 @@
             
             
             <div class="position-relative">
+                {% if post.image %}
+                <img src="{{ post.image.url }}" class="post-image"/>
+                {%endif%}
                 <p><strong>{{ post.body }}</p>
                 <a href="{% url 'post_detail' post.pk %}" class="stretched-link"></a>
             </div>   

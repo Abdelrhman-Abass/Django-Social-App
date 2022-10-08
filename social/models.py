@@ -12,16 +12,27 @@ class Post(models.Model):
     auther = models.ForeignKey(User, on_delete=models.CASCADE)
     likes = models.ManyToManyField(User, blank=True, related_name="likes")
     dislikes = models.ManyToManyField(User, blank=True, related_name="dislikes")
-
-
+    image = models.ImageField(upload_to='media/uploads/post_picture', blank=True, null=True)
 
 class Comment(models.Model):
-    comment = models.TextField()
-    created_at = models.DateTimeField(default=timezone.now)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    likes = models.ManyToManyField(User, blank=True, related_name="like")
-    dislikes = models.ManyToManyField(User, blank=True, related_name="dislike")
+        comment = models.TextField()
+        created_at = models.DateTimeField(default=timezone.now)
+        author = models.ForeignKey(User, on_delete=models.CASCADE)
+        post = models.ForeignKey(Post, on_delete=models.CASCADE)
+        likes = models.ManyToManyField(User, blank=True, related_name="like")
+        dislikes = models.ManyToManyField(User, blank=True, related_name="dislike")
+        parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='+')
+
+        @property
+        def children(self):
+            return Comment.objects.filter(parent=self).order_by('-created_at').all()
+
+        @property
+        def is_parent(self):
+            if self.parent is None:
+                return True
+            return False
+
 
 
 class UserProfile(models.Model):
@@ -41,7 +52,15 @@ class UserProfile(models.Model):
         else:
             return 'media/media/uploads/profile_pictures/default.png'
 
-
+class Notifications(models.Model):
+    # 1 = Like, 2 = Comment, 3 = Follow
+    notification_type = models.IntegerField()
+    user_to = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='notifications_to')
+    user_from = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='notifications_from')
+    date = models.DateTimeField(default=timezone.now)
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
+    user_has_seen = models.BooleanField(default=False)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

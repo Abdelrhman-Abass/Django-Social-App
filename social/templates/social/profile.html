@@ -78,6 +78,9 @@
             <p><a style="text-decoration: none" class="text-primary" href="{% url 'profile' post.auther.profile.pk %}"><strong>@{{ post.auther }}</strong></a> {{ post.created_at }}</p>
             
             <div class="position-relative">
+                {% if post.image %}
+                <img src="{{ post.image.url }}" class="post-image" />       
+                {%endif%}
                 <p><strong>{{ post.body }}</p>
                 <a href="{% url 'post_detail' post.pk %}" class="stretched-link"></a>
             </div>

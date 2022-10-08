@@ -14,12 +14,18 @@ urlpatterns = [
     path('<int:pk>/dislike/', DisLike.as_view(),name='dislike'),
     path('<int:pk>/comment/likes/', CommentLikes.as_view(),name='comment-likes'),
     path('<int:pk>/comment/dislikes/', CommentDisLikes.as_view(),name='comment-dislikes'),
+    path('<int:post_pk>/comment/<int:pk>/reply/', CommentReplyView.as_view(),name='comment-reply'),
 
     path('profile/edit/<int:pk>/', ProfileEditView.as_view(),name='profile-edit'),
     path('profile/<int:pk>/followers/add', AddFollower.as_view(),name='add-follower'),
     path('profile/<int:pk>/followers/delete', RemoveFollower.as_view(),name='delete-follower'),
     path('search/', UserSearch.as_view(),name='search'),
     path('profile/<int:pk>/followers/', ListFollowers.as_view(),name='list-followers'),
+    
+    path('notification/<int:notification_pk>/post/<int:post_pk>/', PostNotification.as_view(),name='post-notification'),
+    path('notification/<int:notification_pk>/post/<int:profile_pk>/', FollowNotification.as_view(),name='follow-notification'),
+
+    path('notification/delete/<int:notification_pk>', RemoveNotification.as_view(), name='notification-delete'),
     
 
 ]
