@@ -16,13 +16,34 @@
 <div class="container">
     <div class="row justify-content-center mt-5">
         <div class="col-md-10 col-sum-12 border-bottom">
+            {% if post.shared_user %}
+            <p>
+                <div>
+                    <a href="{% url 'profile' post.shared_user.profile.pk %}">
+                        <img style="float: left; margin-right: 1rem;" class="rounded-circle" height="30" width="30" src="{{ post.shared_user.profile.picture.url }}" />
+                    </a>
+                    <p style="padding-left: 0.5rem;">
+                        <p><a style="text-decoration: none" class="text-primary" href="{% url 'profile' post.shared_user.profile.pk %}"><strong>@{{ post.shared_user }}</strong></a> {{ post.created_at }}
+                            <span onclick="shareToggle('{{ post.pk }}')"><i class="far fa-share-square share-btn"></i></span>
+                        </p>
+                    </p>
+                </div>
+                {% if request.user == post.shared_user %}
+                    <a href="{% url 'post-edit' post.pk %}" style="color:#333;">  <i class="far fa-edit"></i></a>
+                    <a href="{% url 'post-delete' post.pk %}" style="color:#333;">   <i class="fas fa-trash"></i></a>
+                {% endif %}
+            </p>
+            {% else %}
             <p>
                 <div>
                     <a href="{% url 'profile' post.auther.profile.pk %}">
                         <img style="float: left; margin-right: 1rem;" class="rounded-circle" height="30" width="30" src="{{ post.auther.profile.picture.url }}" />
                     </a>
                     <p style="padding-left: 0.5rem;">
-                        <p><a style="text-decoration: none" class="text-primary" href="{% url 'profile' post.auther.profile.pk %}"><strong>@{{ post.auther }}</strong></a> {{ post.created_at }}</p>                </p>
+                        <p><a style="text-decoration: none" class="text-primary" href="{% url 'profile' post.auther.profile.pk %}"><strong>@{{ post.auther }}</strong></a> {{ post.created_at }}
+                            <span onclick="shareToggle('{{ post.pk }}')"><i class="far fa-share-square share-btn"></i></span>
+                        </p>
+                    </p>
                 </div>
                 {% if request.user == post.auther %}
                     <a href="{% url 'post-edit' post.pk %}" style="color:#333;">  <i class="far fa-edit"></i></a>
@@ -30,27 +51,74 @@
                 {% endif %}
                 
             </p>
-            {% if post.image %}
-                <img src="{{ post.image.url }}" class="post-image"/>
-            {%endif%}
-            <p><strong>{{ post.body }}</p>
-                <div class="d-flex flex-row">
-                    <form method="POST" action="{% url 'add-like' post.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
-                            <i class="far fa-thumbs-up"> <span>{{ post.likes.all.count }}</span></i>
-                        </button>
-                    </form>
-        
-                    <form method="POST" action="{% url 'dislike' post.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
-                            <i class="far fa-thumbs-down"> <span>{{ post.dislikes.all.count }}</span></i>
-                        </button>
-                    </form>
+            {% endif %}
+            {% if post.shared_body %}
+            <div class="position-relative border-bottom mb-3">
+                <p>{{ post.shared_body }}</p>
+            </div>
+            <div style="margin-left: 30px;">
+                <a href="{% url 'profile' post.auther.profile.pk %}">
+                    <img style="float: left; margin-right: 1rem;" class="rounded-circle" height="30" width="30" src="{{ post.auther.profile.picture.url }}" />
+                </a>
+                <p style="padding-top: 0.5rem;">
+                    <a class="text-primary post-link" href="{% url 'profile' post.auther.profile.pk %}">@{{ post.auther }}</a> {{ post.created_at }}
+                </p>
+            </div>
+            {% endif %}
+            <div style="margin-left: 30px;">
+                <div class="position-relative pt-3">
+                    
+                    {% if post.image.count > 0 %}
+                        <div class="row">
+                            {% for img in post.image.all %}
+                                <div class="col-md-4 col-xs-12">
+                                    <img src="{{ img.image.url }}" class="post-image" />
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="position-relative">
+                        {% if post.image.count > 0 %}
+                        <div class="row">
+                            {% for img in post.image.all %}
+                                <div class="col-md-4 col-xs-12">
+                                    <img src="{{ img.image.url }}" class="post-image" />
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <p><strong>{{ post.body }}</p>
+                        <a href="{% url 'post_detail' post.pk %}" class="stretched-link"></a>
+                    </div>
                 </div>
+                
+                
+                    <div class="d-flex flex-row">
+                        <form method="POST" action="{% url 'add-like' post.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
+                                <i class="far fa-thumbs-up"> <span>{{ post.likes.all.count }}</span></i>
+                            </button>
+                        </form>
+            
+                        <form method="POST" action="{% url 'dislike' post.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
+                                <i class="far fa-thumbs-down"> <span>{{ post.dislikes.all.count }}</span></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'shared-post' post.pk %}" class="d-none" id="{{ post.pk }}">
+
+                            {% csrf_token %}
+                            {{ shared_form | crispy}}
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success mt-3">share post</button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
         </div>
     </div>  
     <div class="row justify-content-center mt-5">

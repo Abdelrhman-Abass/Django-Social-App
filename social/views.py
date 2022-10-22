@@ -1,9 +1,12 @@
 from django.shortcuts import render ,redirect
 from django.urls import reverse_lazy
+from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect , HttpResponse
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.views import View
+from django.utils import timezone
 from .models import *
+from django.contrib import messages
 from django.views.generic.edit import *
 from .forms import *
 from django.db.models import Q
@@ -16,10 +19,11 @@ class PostListView(View):
         posts = Post.objects.filter(
             auther__profile__followers__in=[logged_in_user.id]
         ).order_by('-created_at')
-        
+        shared_form = ShareForm()
         
         context = {
             'posts': posts,
+            'shared_form':shared_form,
         }
         return render(request , 'social/post_list.html', context)
 
@@ -38,10 +42,18 @@ class AddPostForm(LoginRequiredMixin ,View):
             auther__profile__followers__in=[logged_in_user.id] 
         ).order_by('-created_at')
         form = PostForm(request.POST , request.FILES)
+        files = request.FILES.getlist('image')
 
         if form.is_valid():
             new_post = form.save(commit=False)
             new_post.auther = request.user
+            new_post.save()
+
+            for f in files:
+                img = Image(image=f)
+                img.save()
+                new_post.image.add(img)
+
             new_post.save()
 
         context = {
@@ -54,6 +66,7 @@ class PostDetailView(LoginRequiredMixin , View):
     def get(self, request, pk, *args, **kwargs):
         post = Post.objects.get(pk=pk)
         form = CommentForm()
+        shared_form = ShareForm()
 
         comment = Comment.objects.filter(post=post).order_by('-created_at')        
 
@@ -61,6 +74,7 @@ class PostDetailView(LoginRequiredMixin , View):
             'post': post,
             'form': form,
             'comment': comment,
+            'shared_form':shared_form,
         }
         return render(request , 'social/post_detail.html', context)
 
@@ -68,9 +82,10 @@ class PostDetailView(LoginRequiredMixin , View):
         logged_in_user = request.user
         post = Post.objects.filter(
             auther__profile__followers__in=[logged_in_user.id]
-        ).order_by('-created_at')
+        )
         
         form = CommentForm(request.POST)
+        shared_form = ShareForm()
 
         if form.is_valid():
             new_comment = form.save(commit=False)
@@ -86,8 +101,31 @@ class PostDetailView(LoginRequiredMixin , View):
             'post': post,
             'form': form,
             'comment': comment,
+            'shared_form':shared_form,
         }
         return render(request , 'social/post_detail.html', context)
+
+class SharedPostView(View):
+    def post(self, request, pk ,*args, **kwargs):
+        original_post = Post.objects.get(pk=pk)
+        form = ShareForm(request.POST)
+
+        if form.is_valid():
+            new_post = Post(
+                shared_body=self.request.POST.get('body'),
+                body=original_post.body,
+                auther=original_post.auther,
+                created_at=original_post.created_at,
+                shared_user=request.user,
+                shared_at=timezone.now(),
+            )
+            new_post.save()
+
+            for img in original_post.image.all():
+                new_post.add(img)
+            new_post.save()
+        
+        return redirect('post-list') 
 
 
 
@@ -164,7 +202,7 @@ class ProfileView(View):
     def get(self, request, pk, *args, **kwargs):
         profile = UserProfile.objects.get(pk=pk)
         user = profile.user
-        posts = Post.objects.filter(auther=user).order_by('-created_at')
+        posts = Post.objects.filter(auther=user)
 
         followers = profile.followers.all()
         if len(followers) == 0:
@@ -394,7 +432,15 @@ class FollowNotification(View):
 
         return redirect('profile', pk=profile_pk)
 
+class ThreadNotification(View):
+    def get(self, request, notification_pk, object_pk, *args, **kwargs):
+        notification = Notifications.objects.get(pk=notification_pk)
+        thread = ThreadModel.objects.get(pk=object_pk)
 
+        notification.user_has_seen = True
+        notification.save()
+
+        return redirect('thread', pk=object_pk)
 
 class RemoveNotification(View):
     def delete(self, request, notification_pk, *args, **kwargs):
@@ -404,3 +450,87 @@ class RemoveNotification(View):
         notification.save()
 
         return HttpResponse('Success', content_type='text/plain')
+
+class ListThreads(View):
+    def get(self, request, *args, **kwargs):
+        threads = ThreadModel.objects.filter(Q(user=request.user) | Q(receiver=request.user))
+
+        context = {
+            'threads': threads
+        }
+
+        return render(request, 'social/inbox.html', context)
+
+class CreateThread(View):
+    def get(self, request, *args, **kwargs):
+        form = ThreadForm()
+
+        context = {
+            'form': form
+        }
+
+        return render(request, 'social/create_thread.html', context)
+
+    def post(self, request, *args, **kwargs):
+        form = ThreadForm(request.POST)
+
+        username = request.POST.get('username')
+
+        try:
+            receiver = User.objects.get(username=username)
+            if ThreadModel.objects.filter(user=request.user, receiver=receiver).exists():
+                thread = ThreadModel.objects.filter(user=request.user, receiver=receiver)[0]
+                return redirect('thread', pk=thread.pk)
+            elif ThreadModel.objects.filter(user=receiver, receiver=request.user).exists():
+                thread = ThreadModel.objects.filter(user=receiver, receiver=request.user)[0]
+                return redirect('thread', pk=thread.pk)
+
+            if form.is_valid():
+                thread = ThreadModel(
+                    user=request.user,
+                    receiver=receiver
+                )
+                thread.save()
+
+                return redirect('thread', pk=thread.pk)
+        except:
+            messages.error(request, 'Invalid username')
+            return redirect('create-thread')
+
+class ThreadView(View):
+    def get(self, request, pk, *args, **kwargs):
+        form = MessageForm()
+        thread = ThreadModel.objects.get(pk=pk)
+        message_list = MessageModel.objects.filter(thread__pk__contains=pk)
+        context = {
+            'thread': thread,
+            'form': form,
+            'message_list': message_list
+        }
+
+        return render(request, 'social/thread.html', context)
+
+class CreateMessage(View):
+    def post(self, request, pk, *args, **kwargs):
+        form = MessageForm(request.POST, request.FILES)
+        
+        thread = ThreadModel.objects.get(pk=pk)
+        if thread.receiver == request.user:
+            receiver = thread.user
+        else:
+            receiver = thread.receiver
+
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.thread = thread
+            message.sender_user = request.user
+            message.receiver_user = receiver
+            message.save()
+
+        notification = Notifications.objects.create(
+            notification_type=4,
+            user_from=request.user,
+            user_to=receiver,
+            thread=thread
+        )
+        return redirect('thread', pk=pk)            

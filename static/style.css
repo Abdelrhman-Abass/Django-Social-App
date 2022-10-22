@@ -83,3 +83,11 @@
 .cont .container {
 	max-width: 100px;
 }
+.share-btn {
+	cursor: pointer;
+}
+
+.shared-post {
+	margin-left: 30px;
+}
+

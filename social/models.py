@@ -8,11 +8,18 @@ from django.dispatch import receiver
 
 class Post(models.Model):
     body = models.TextField()
+    shared_body = models.TextField(null=True , blank=True)
     created_at = models.DateTimeField(default=timezone.now)
+    shared_at = models.DateTimeField(null=True , blank=True)
     auther = models.ForeignKey(User, on_delete=models.CASCADE)
+    shared_user = models.ForeignKey(User, on_delete=models.CASCADE ,null =True ,blank=True ,related_name="+")
     likes = models.ManyToManyField(User, blank=True, related_name="likes")
     dislikes = models.ManyToManyField(User, blank=True, related_name="dislikes")
-    image = models.ImageField(upload_to='media/uploads/post_picture', blank=True, null=True)
+    image = models.ManyToManyField('Image', blank=True)
+
+    class Meta:
+        ordering = ['-created_at' , 'shared_at']
+        
 
 class Comment(models.Model):
         comment = models.TextField()
@@ -53,13 +60,14 @@ class UserProfile(models.Model):
             return 'media/media/uploads/profile_pictures/default.png'
 
 class Notifications(models.Model):
-    # 1 = Like, 2 = Comment, 3 = Follow
+    # 1 = Like, 2 = Comment, 3 = Follow , 4 = DM
     notification_type = models.IntegerField()
     user_to = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='notifications_to')
     user_from = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='notifications_from')
     date = models.DateTimeField(default=timezone.now)
     post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
     comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
+    thread = models.ForeignKey('ThreadModel', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
     user_has_seen = models.BooleanField(default=False)
 
 @receiver(post_save, sender=User)
@@ -71,3 +79,21 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
 	instance.profile.save()
+
+
+class Image(models.Model):
+    image = models.ImageField(upload_to='media/uploads/post_picture', blank=True, null=True)
+
+
+class ThreadModel(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='+')
+	receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='+')
+
+class MessageModel(models.Model):
+	thread = models.ForeignKey('ThreadModel', related_name='+', on_delete=models.CASCADE, blank=True, null=True)
+	sender_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='+')
+	receiver_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='+')
+	body = models.CharField(max_length=1000)
+	image = models.ImageField(upload_to='media/uploads/message_photos', blank=True, null=True)
+	date = models.DateTimeField(default=timezone.now)
+	is_read = models.BooleanField(default=False)

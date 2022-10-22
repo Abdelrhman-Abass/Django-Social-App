@@ -44,7 +44,13 @@
 					<a href="{% url 'post-notification' notification.pk notification.comment.post.pk %}">@{{ notification.user_from }} replied to your comment</a>
 					<span class="dropdown-item-close" onclick="removeNotification(`{% url 'notification-delete' notification.pk %}`, `{{ request.path }}`)">&times;</span>
 				</div>
+
 				{% endif %}
+			{% elif notification.thread %}
+				<div class="dropdown-item-parent">
+					<a href="{% url 'thread-notification' notification.pk notification.thread.pk %}">@{{ notification.user_from }} sent you a message</a>
+					<span class="dropdown-item-close" onclick="removeNotification(`{% url 'notification-delete' notification.pk %}`, `{{ request.path }}`)">&times;</span>
+				</div>
 			{% else %}
 			<div class="dropdown-item-parent">
 					<a href="{% url 'follow-notification' notification.pk notification.user_from.profile.pk %}">@{{ notification.user_from }} has started following you</a>

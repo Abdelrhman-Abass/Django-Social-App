@@ -17,6 +17,49 @@
 
     <script src="https://kit.fontawesome.com/1d71f92e0a.js" crossorigin="anonymous"></script>
     <title>Social network </title>
+    <style>
+      .inbox-icon-container {
+        padding-right: 20px;
+      
+      }
+      
+      .inbox-icon {
+        color: #333;
+        transition: 0.5s;
+        margin-right: 5px;
+      }
+      
+      .inbox-icon:hover {
+        transition: 0.5s;
+      }
+      
+      .sent-message {
+        background-color: #f3f3f3;
+        border-radius: 30px;
+        padding: 10px 25px;
+        width: 35%;
+      }
+      
+      .received-message {
+        background-color: rgb(1, 196, 255);
+        color: #fff;
+        border-radius: 30px;
+        padding: 10px 25px;
+        width: 35%;
+      }
+      
+      .message-receiver-container {
+        margin-left: auto;
+        margin-right: 0;
+      }
+      
+      .message-image {
+        border-radius: 10px;
+        max-width: 20%;
+        height: auto;
+      }
+     
+    </style>
   </head>
   <body>
     {% include 'core\navbar.html' %}
