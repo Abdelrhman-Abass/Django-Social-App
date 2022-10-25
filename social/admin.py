@@ -8,5 +8,7 @@ admin.site.register(UserProfile)
 admin.site.register(Comment)
 admin.site.register(Notifications)
 admin.site.register(Image)
+admin.site.register(ThreadModel)
+admin.site.register(Tag)
 
 

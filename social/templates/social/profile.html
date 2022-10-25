@@ -99,7 +99,10 @@
             
             {% if post.shared_body %}
             <div class="position-relative border-bottom mb-3">
-                <p>{{ post.shared_body }}</p>
+                <div style="margin-left: ;30px;">
+                <div class="body"><p>{{ post.shared_body }}</p>
+                </div></div>
+                
             </div>
             <div style="margin-left: 30px;">
                 <a href="{% url 'profile' post.auther.profile.pk %}">
@@ -110,49 +113,51 @@
                 </p>
             </div>
             {% endif %}
-            <div class="position-relative pt-3">
-                <div style="margin-left: 30px;">
-                {% if post.image.count > 0 %}
-                    <div class="row">
-                        {% for img in post.image.all %}
-                            <div class="col-md-4 col-xs-12">
-                                <img src="{{ img.image.url }}" class="post-image" />
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                <div class="position-relative">
+            <div style="margin-left: 30px;">
+                <div class="position-relative pt-3">
+                    
                     {% if post.image.count > 0 %}
-                    <div class="row">
-                        {% for img in post.image.all %}
-                            <div class="col-md-4 col-xs-12">
-                                <img src="{{ img.image.url }}" class="post-image" />
-                            </div>
-                        {% endfor %}
-                    </div>
+                        <div class="row">
+                            {% for img in post.image.all %}
+                                <div class="col-md-4 col-xs-12">
+                                    <img src="{{ img.image.url }}" class="post-image" />
+                                </div>
+                            {% endfor %}
+                        </div>
                     {% endif %}
-                    <p><strong>{{ post.body }}</p>
-                    <a href="{% url 'post_detail' post.pk %}" class="stretched-link"></a>
+                    <div class="position-relative">
+                        {% if post.image.count > 0 %}
+                        <div class="row">
+                            {% for img in post.image.all %}
+                                <div class="col-md-4 col-xs-12">
+                                    <img src="{{ img.image.url }}" class="post-image" />
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="body"><p>{{ post.body }}</p></div>
+                        
+                        <a href="{% url 'post_detail' post.pk %}" class="stretched-link"></a>
+                    </div>
                 </div>
-            </div>
-            <div class="d-flex flex-row">
-                <form method="POST" action="{% url 'add-like' post.pk %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.path }}">
-                    <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
-                        <i class="far fa-thumbs-up"> <span>{{ post.likes.all.count }}</span></i>
-                    </button>
-                </form>
+                <div class="d-flex flex-row">
+                    <form method="POST" action="{% url 'add-like' post.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
+                            <i class="far fa-thumbs-up"> <span>{{ post.likes.all.count }}</span></i>
+                        </button>
+                    </form>
 
-                <form method="POST" action="{% url 'dislike' post.pk %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.path }}">
-                    <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
-                        <i class="far fa-thumbs-down"> <span>{{ post.dislikes.all.count }}</span></i>
-                    </button>
-                </form>
-            </div>        
-        </div>
+                    <form method="POST" action="{% url 'dislike' post.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button style="background-color: transparent; border: none; box-shadow: none;" type="submit">
+                            <i class="far fa-thumbs-down"> <span>{{ post.dislikes.all.count }}</span></i>
+                        </button>
+                    </form>
+                </div>        
+            </div>
     </div>   
     {% endfor %}   
 </div>

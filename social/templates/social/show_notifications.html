@@ -9,9 +9,7 @@
 	</div>
 	  
 	{% endif %}
-	{% comment %} <div class="notification-badge" onclick="showNotifications()">
-		<i class="fa-solid fa-envelope"><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ notifications.count  }}</span></i>
-	</div> {% endcomment %}
+	
 	<div class="dropdown-content d-none" id="notification-container">
 		{% if notifications.count == 0 %}
 		<div class="dropdown-item-parent">

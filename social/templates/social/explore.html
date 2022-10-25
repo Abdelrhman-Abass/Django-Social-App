@@ -1,18 +1,35 @@
-{% extends "core/base.html" %}
-
+{% extends 'core/base.html' %}
 {% load crispy_forms_tags %}
 
 {% block content %}
 
-<div class="container">
-    <a href={% url 'add' %} class="btn btn-light">ADD TWEET</a> 
-</div>
+	<div class="container">
+		<div class="row mt-5">
+			<div class="col-md-5 col-sm-6">
+				<a href="{% url 'post-list' %}" class="btn btn-light">Back To Feed</a>
+			</div>
+		</div>
 
-<div class="container">
+		<div class="row justify-content-center mt-3">
+			<div class="col-md-5 col-sm-12">
+				{% if tag %}
+					<h3>Explore #{{ tag.name }} Posts</h3>
+					<p class="mb-3">Most recent posts tagged with {{ tag.name }}</p>
+				{% else %}
+					<h3>Explore Posts</h3>
+					<p class="mb-3">Explore tags to find new posts</p>
+				{% endif %}
 
-    {% for post in posts %}
-    <div class="row justify-content-center text-left mt-3 mb-5">
-        <div class="col-md-5 col-sum-12 border-bottom">
+				<form method="POST" class="mb-5">
+					{% csrf_token %}
+					{{ explore_Form | crispy }}
+				</form>
+			</div>
+		</div>
+
+		{% for post in pos %}
+        <div class="row justify-content-center text-left mt-3 mb-5">
+            <div class="col-md-5 col-sum-12 border-bottom">
             {% if post.shared_user %}
             <p>
                 <div>
@@ -20,12 +37,15 @@
                         <img style="float: left; margin-right: 1rem;" class="rounded-circle" height="30" width="30" src="{{ post.shared_user.profile.picture.url }}" />
                     </a>
                     <p style="padding-left: 0.5rem;">
-                        <p><a style="text-decoration: none" class="text-primary" href="{% url 'profile' post.shared_user.profile.pk %}"><strong>@{{ post.shared_user }}</strong></a>{{ post.shared_at }}
+                        <p><a style="text-decoration: none" class="text-primary" href="{% url 'profile' post.shared_user.profile.pk %}"><strong>@{{ post.shared_user }}</strong></a> {{ post.created_at }}
                             <span onclick="shareToggle('{{ post.pk }}')"><i class="far fa-share-square share-btn"></i></span>
                         </p>
                     </p>
                 </div>
-                
+                {% if request.user == post.shared_user %}
+                    <a href="{% url 'post-edit' post.pk %}" style="color:#333;">  <i class="far fa-edit"></i></a>
+                    <a href="{% url 'post-delete' post.pk %}" style="color:#333;">   <i class="fas fa-trash"></i></a>
+                {% endif %}
             </p>
             {% else %}
             <p>
@@ -100,4 +120,4 @@
     </div>   
     {% endfor %}
 </div>
-{% endblock content %}
+{% endblock content %} 

@@ -87,8 +87,9 @@
                             {% endfor %}
                         </div>
                         {% endif %}
-                        <p><strong>{{ post.body }}</p>
-                        <a href="{% url 'post_detail' post.pk %}" class="stretched-link"></a>
+                        <div class="body"><p><strong>{{ post.body }}</p></div>
+                        
+                        <a href="{% url 'post_detail' post.pk %}" ></a>
                     </div>
                 </div>
                 
@@ -151,7 +152,8 @@
                         <a href="{% url 'comment-edit' post.pk com.pk %}" style="color:#333;">  <i class="far fa-edit"></i></a><a href="{% url 'comment-delete' post.pk com.pk %}" style="color:#333;">   <i class="fas fa-trash"></i></a>
                     {% endif %}
                 </p>
-                <p><strong>{{ com.comment }}</p>
+                <div class="body"><p><strong>{{ com.comment }}</p></div>
+                
                     <div class="d-flex flex-row">
                         <form method="POST" action="{% url 'comment-likes' com.pk %}">
                             {% csrf_token %}
@@ -203,7 +205,8 @@
                                 <a href="{% url 'comment-edit' post.pk com.pk %}" style="color:#333;">  <i class="far fa-edit"></i></a><a href="{% url 'comment-delete' post.pk com.pk %}" style="color:#333;">   <i class="fas fa-trash"></i></a>
                             {% endif %}
                         </p>
-                        <p>{{ child_comment.comment }}</p>
+                        <div class="body"><p>{{ child_comment.comment }}</p></div>
+                        
                     </div>
                 </div>
             </div>

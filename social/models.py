@@ -17,6 +17,32 @@ class Post(models.Model):
     dislikes = models.ManyToManyField(User, blank=True, related_name="dislikes")
     image = models.ManyToManyField('Image', blank=True)
 
+    tags = models.ManyToManyField('Tag', blank=True)
+    def create_tags(self):
+        for word in self.body.split():
+            if(word[0] == '#'):
+                tag = Tag.objects.filter(name=word[1:]).first()
+                if tag:
+                    self.tags.add(tag.pk)
+                else:
+                    tag= Tag(name=word[1:])
+                    tag.save()
+                    self.tags.add(tag.pk)
+                self.save()        
+                
+        if self.shared_body:
+            for word in self.shared_body.split():
+                if (word[0] == '#'):
+                    tag = Tag.objects.filter(name=word[1:]).first()
+                    if tag:
+                        self.tags.add(tag.pk)
+                    else:
+                        tag=Tag(name=word[1:])
+                        tag.save()
+                        self.tags.add(tag.pk)
+                    self.save()                
+        
+
     class Meta:
         ordering = ['-created_at' , 'shared_at']
         
@@ -30,6 +56,21 @@ class Comment(models.Model):
         dislikes = models.ManyToManyField(User, blank=True, related_name="dislike")
         parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='+')
 
+        tags = models.ManyToManyField('Tag', blank=True)
+
+        def create_tags(self):
+            for word in self.comment.split():
+                if (word[0] == '#'):
+                    tag = Tag.objects.get(name=word[1:])
+                    if tag:
+                        self.tags.add(tag.pk)
+                    else:
+                        tag = Tag(name=word[1:])
+                        tag.save()
+                        self.tags.add(tag.pk)
+                    self.save()
+            
+                
         @property
         def children(self):
             return Comment.objects.filter(parent=self).order_by('-created_at').all()
@@ -97,3 +138,7 @@ class MessageModel(models.Model):
 	image = models.ImageField(upload_to='media/uploads/message_photos', blank=True, null=True)
 	date = models.DateTimeField(default=timezone.now)
 	is_read = models.BooleanField(default=False)
+
+
+class Tag(models.Model):
+	name = models.CharField(max_length=255)    

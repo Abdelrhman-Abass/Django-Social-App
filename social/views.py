@@ -49,6 +49,8 @@ class AddPostForm(LoginRequiredMixin ,View):
             new_post.auther = request.user
             new_post.save()
 
+            new_post.create_tags()
+
             for f in files:
                 img = Image(image=f)
                 img.save()
@@ -59,6 +61,7 @@ class AddPostForm(LoginRequiredMixin ,View):
         context = {
             'posts': posts,
             'form': form,
+            
         }
         return render(request , 'social/post_list.html', context)
 
@@ -92,6 +95,8 @@ class PostDetailView(LoginRequiredMixin , View):
             new_comment.author = request.user
             new_comment.post = post
             new_comment.save()
+
+            new_comment.create_tags()
 
         comment = Comment.objects.filter(post=post).order_by('-created_at')
         notification = Notifications.objects.create(notification_type=2, user_from=request.user, user_to=post.auther, post=post)
@@ -534,3 +539,39 @@ class CreateMessage(View):
             thread=thread
         )
         return redirect('thread', pk=pk)            
+
+class Explore(View):
+    def get(self, request,*args, **kwargs):
+        exploreForm = ExploreForm()
+        query = self.request.GET.get('query')
+        tag = Tag.objects.filter(name=query).first()
+        if tag:
+            posts = Post.objects.filter(tags__in=[tag]) 
+        else:
+            posts = Post.objects.all() 
+
+        context={'tag':tag , 'pos':posts , 'explore_Form':exploreForm}       
+        return render(request,'social/explore.html' , context)
+
+    def post(self, request,*args, **kwargs):
+        exploreForm = ExploreForm(request.POST)
+        if exploreForm.is_valid():
+            query = exploreForm.cleaned_data['query']
+            tag = Tag.objects.filter(name=query).first()
+
+            posts = None
+            if tag:
+                posts = Post.objects.filter(tags__in=[tag])
+
+            if posts:
+                context={
+                    'tag':tag,
+                    'pos':posts,
+                }
+            else:
+                context={
+                    'tag':tag,
+                }
+            return  HttpResponseRedirect(f'?query={query}')
+        return  HttpResponseRedirect(f'explore/')    
+            
