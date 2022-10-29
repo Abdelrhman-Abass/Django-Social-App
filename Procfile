@@ -1,0 +1,1 @@
+web: gunicorn twet_blog.wsgi

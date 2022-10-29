@@ -575,3 +575,4 @@ class Explore(View):
             return  HttpResponseRedirect(f'?query={query}')
         return  HttpResponseRedirect(f'explore/')    
             
+
