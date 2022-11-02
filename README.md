@@ -1,4 +1,4 @@
-<h1 align="center">Django-Soaial APP </h1>
+<h1 align="center">👩🏻‍💻Django-Soaial APP </h1>
 
 ##### in this app trying to understand the main core of CBV , add more knowledge of auth in django
 ##### and more experince in working with models and relations
@@ -10,10 +10,10 @@
 * [Bootstrap](https://getbootstrap.com/) Responsive Website
 * [JS](https://www.javascript.com/) Dynamic Website
 
-## About 
+##  📝About 
 In my journy to learn Django Frammwork my third project, Social Media App
 
-### Features 
+### ✨Features 
 
 * Ability to control tweets in add , edit and remove
 * Make a comment and reply to a comment 
