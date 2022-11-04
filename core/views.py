@@ -5,4 +5,4 @@ from django.views import View
 class Index(View):
 
     def get(self, request, *args , **kwargs):
-        return render(request, 'core/index.html',{})
+        return render(request, 'core\index.html',{})
