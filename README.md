@@ -1,6 +1,6 @@
 <h1 align="center">👩🏻‍💻Django-Soaial APP </h1>
 
-##### in this app trying to understand the main core of CBV , add more knowledge of auth in django
+##### in this app i am trying to understand the main core of CBV , add more knowledge of auth in django
 ##### and more experince in working with models and relations
 
 ## MAIN USED 
@@ -11,7 +11,7 @@
 * [JS](https://www.javascript.com/) Dynamic Website
 
 ##  📝About 
-In my journy to learn Django Frammwork my third project, Social Media App
+In my journy to learn Django Framework my third project, Social Media App
 
 ### ✨Features 
 
