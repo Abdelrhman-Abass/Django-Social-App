@@ -11,7 +11,7 @@
 * [JS](https://www.javascript.com/) Dynamic Website
 
 ##  📝About 
-In my journy to learn Django Framework my third project, Social Media App
+In my journey to learn Django Framework my third project, Social Media App
 
 ### ✨Features 
 
